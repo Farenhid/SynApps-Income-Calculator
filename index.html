@@ -577,7 +577,7 @@
       function Field({ field, value, onChange }) {
         return (
           <label className="group rounded-2xl border border-slate-200 bg-slate-50/80 p-4 transition focus-within:border-blue-500 focus-within:bg-white focus-within:shadow-lg focus-within:shadow-blue-100">
-            <span className="block text-base font-bold text-slate-900">{field.label}</span>
+            <span className="block text-sm font-bold text-slate-900">{field.label}</span>
             <span className="mt-2 block min-h-12 text-sm leading-6 text-slate-500">
               {field.description}
             </span>
@@ -587,7 +587,7 @@
               value={value}
               placeholder={field.placeholder}
               onChange={(event) => onChange(field.key, event.target.value)}
-              className="mt-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-right text-lg font-semibold text-slate-900 outline-none transition placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              className="mt-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-right text-sm font-semibold text-slate-900 outline-none transition placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             />
           </label>
         );
@@ -599,7 +599,7 @@
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex w-fit items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm font-bold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100"
+            className="group inline-flex w-fit items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100"
           >
             <span>منبع فرمول</span>
             <span className="text-xs leading-none text-slate-400 transition group-hover:text-blue-500" aria-hidden="true">
@@ -676,10 +676,10 @@
                   <span className="mb-4 w-fit rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
                     مدل تاب‌آوری برای استارتاپ‌ها
                   </span>
-                  <h1 className="text-3xl font-extrabold leading-tight text-slate-950 sm:text-4xl lg:text-5xl">
+                  <h1 className="text-xl font-extrabold leading-tight text-slate-950 sm:text-2xl lg:text-3xl">
                     ماشین‌حساب حقوق پایه ساعتی (مدل تاب‌آوری)
                   </h1>
-                  <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
+                  <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600">
                     حقوق پایه ساعتی امسال را بر اساس حداقل نیاز، نرخ ایده‌آل بازار و
                     وضعیت تاب‌آوری مالی شرکت محاسبه کنید.
                   </p>
@@ -689,7 +689,7 @@
                   <p className="text-sm font-medium text-blue-100">نتیجه فعلی</p>
                   <div className="mt-4 rounded-2xl bg-white/10 p-5 ring-1 ring-white/15">
                     <p className="text-sm text-blue-100">حقوق پایه ساعتی</p>
-                    <p className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">
+                    <p className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">
                       {visibleRate !== null ? `${formatToman(visibleRate)} تومان` : "—"}
                     </p>
                   </div>
@@ -715,7 +715,7 @@
                 className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60 sm:p-7"
               >
                 <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5">
-                  <h2 className="text-2xl font-bold text-slate-950">ورودی‌های محاسبه</h2>
+                  <h2 className="text-lg font-bold text-slate-950">ورودی‌های محاسبه</h2>
                   <p className="leading-7 text-slate-500">
                     مقادیر را به تومان و ماه وارد کنید. نتیجه می‌تواند هم‌زمان تغییر کند
                     و با دکمه محاسبه نهایی شود.
@@ -741,7 +741,7 @@
 
                 <button
                   type="submit"
-                  className="mt-6 w-full rounded-2xl bg-blue-700 px-6 py-4 text-lg font-extrabold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-200"
+                  className="mt-6 w-full rounded-2xl bg-blue-700 px-6 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-200"
                 >
                   محاسبه حقوق پایه امسال
                 </button>
@@ -751,7 +751,7 @@
                 <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <h2 className="text-xl font-bold text-slate-950">فرمول محاسبه</h2>
+                      <h2 className="text-base font-bold text-slate-950">فرمول محاسبه</h2>
                       <p className="mt-2 text-sm leading-6 text-slate-500">
                         منطق این فرمول از داکیومنت عدد ثابت ساعتی سیناپس آمده است.
                       </p>
@@ -768,14 +768,14 @@
                 </div>
 
                 <div className="rounded-[2rem] border border-blue-100 bg-blue-50 p-6">
-                  <h2 className="text-xl font-bold text-blue-950">خروجی قابل پرداخت</h2>
+                  <h2 className="text-base font-bold text-blue-950">خروجی قابل پرداخت</h2>
                   <p className="mt-4 text-sm leading-7 text-blue-800">
                     این عدد نرخ پایه ساعتی پیشنهادی برای سال جاری است و می‌تواند مبنای
                     تصمیم‌گیری مالی تیم در شرایط فعلی شرکت باشد.
                   </p>
                   <div className="mt-5 rounded-2xl bg-white p-5 text-center shadow-sm">
                     <p className="text-sm font-medium text-slate-500">مبلغ نهایی</p>
-                    <p className="mt-2 text-3xl font-extrabold text-blue-800">
+                    <p className="mt-2 text-xl font-extrabold text-blue-800">
                       {visibleRate !== null ? `${formatToman(visibleRate)} تومان` : "نامشخص"}
                     </p>
                   </div>
@@ -873,10 +873,10 @@
                   <span className="mb-4 w-fit rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
                     ماتریس ضریب فردی
                   </span>
-                  <h1 className="text-3xl font-extrabold leading-tight text-slate-950 sm:text-4xl lg:text-5xl">
+                  <h1 className="text-xl font-extrabold leading-tight text-slate-950 sm:text-2xl lg:text-3xl">
                     محاسبه پرداخت ماهانه بر اساس عدد پایه، ضریب و ساعات کار
                   </h1>
-                  <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
+                  <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600">
                     برای هر نیرو نقش را انتخاب کنید، معیارهای رفتاری را امتیاز دهید و
                     مبلغ قابل پرداخت ماهانه را از ضرب عدد پایه در ضریب فردی و ساعات کار ببینید.
                   </p>
@@ -888,24 +888,24 @@
                   </p>
                   <div className="mt-4 rounded-2xl bg-white/10 p-5 ring-1 ring-white/15">
                     <p className="text-sm text-blue-100">پرداخت ماهانه پیشنهادی</p>
-                    <p className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">
+                    <p className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">
                       {monthlyPay !== null ? `${formatToman(monthlyPay)} تومان` : "—"}
                     </p>
                   </div>
                   <div className="mt-5 grid grid-cols-3 gap-3 text-center">
                     <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
                       <p className="text-xs text-blue-100">پایه ساعتی</p>
-                      <p className="mt-2 text-lg font-extrabold">
+                      <p className="mt-2 text-sm font-extrabold">
                         {Number.isFinite(baseHourlyRate) ? formatToman(baseHourlyRate) : "—"}
                       </p>
                     </div>
                     <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
                       <p className="text-xs text-blue-100">ضریب</p>
-                      <p className="mt-2 text-lg font-extrabold">{multiplier.toFixed(2)}x</p>
+                      <p className="mt-2 text-sm font-extrabold">{multiplier.toFixed(2)}x</p>
                     </div>
                     <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
                       <p className="text-xs text-blue-100">ساعت</p>
-                      <p className="mt-2 text-lg font-extrabold">
+                      <p className="mt-2 text-sm font-extrabold">
                         {Number.isFinite(workedHours) ? formatNumber(workedHours) : "—"}
                       </p>
                     </div>
@@ -918,7 +918,7 @@
               <section className="flex flex-col gap-6">
                 <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60 sm:p-7">
                   <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5">
-                    <h2 className="text-2xl font-bold text-slate-950">مشخصات محاسبه</h2>
+                    <h2 className="text-lg font-bold text-slate-950">مشخصات محاسبه</h2>
                     <p className="leading-7 text-slate-500">
                       عدد پایه می‌تواند همان خروجی تب حقوق پایه باشد. ضریب فردی از امتیازهای نقش انتخاب‌شده محاسبه می‌شود.
                     </p>
@@ -967,7 +967,7 @@
 
                 <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60 sm:p-7">
                   <div className="mb-5 flex flex-col gap-2 border-b border-slate-100 pb-5">
-                    <h2 className="text-2xl font-bold text-slate-950">انتخاب نقش ارزیابی</h2>
+                    <h2 className="text-lg font-bold text-slate-950">انتخاب نقش ارزیابی</h2>
                     <p className="leading-7 text-slate-500">
                       با تغییر نقش، امتیازهای قبلی پاک می‌شود تا ضریب برای ماتریس جدید از ابتدا مشخص شود.
                     </p>
@@ -988,7 +988,7 @@
                               : "border-slate-200 bg-slate-50/80 hover:border-blue-200 hover:bg-white"
                           }`}
                         >
-                          <span className="block text-base font-extrabold text-slate-950">
+                          <span className="block text-sm font-extrabold text-slate-950">
                             {role.title}
                           </span>
                           <span className="mt-1 block text-sm text-slate-500">{role.farsi}</span>
@@ -1010,7 +1010,7 @@
                             {index + 1}
                           </span>
                           <div>
-                            <h3 className="text-lg font-extrabold text-slate-950">{factor.name}</h3>
+                            <h3 className="text-sm font-extrabold text-slate-950">{factor.name}</h3>
                             <p className="mt-1 text-sm text-slate-500">{factor.dimFull}</p>
                           </div>
                         </div>
@@ -1053,7 +1053,7 @@
                   <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <h2 className="text-xl font-bold text-slate-950">خلاصه ضریب فردی</h2>
+                        <h2 className="text-base font-bold text-slate-950">خلاصه ضریب فردی</h2>
                         <p className="mt-2 text-sm leading-6 text-slate-500">
                           منطق امتیازدهی و ضریب از داکیومنت Dynamic Base-Rate Multiplier آمده است.
                         </p>
@@ -1063,13 +1063,13 @@
                     <div className="mt-5 grid grid-cols-2 gap-3">
                       <div className="rounded-2xl bg-slate-50 p-4 text-center">
                         <p className="text-sm text-slate-500">امتیاز کل</p>
-                        <p className="mt-2 text-3xl font-extrabold text-slate-950">
+                        <p className="mt-2 text-xl font-extrabold text-slate-950">
                           {totalScore} <span className="text-base text-slate-400">/ 50</span>
                         </p>
                       </div>
                       <div className="rounded-2xl bg-blue-50 p-4 text-center">
                         <p className="text-sm text-blue-700">ضریب محاسبه‌شده</p>
-                        <p className="mt-2 text-3xl font-extrabold text-blue-800">
+                        <p className="mt-2 text-xl font-extrabold text-blue-800">
                           {multiplier.toFixed(2)}x
                         </p>
                       </div>
@@ -1083,12 +1083,12 @@
                   </div>
 
                   <div className="rounded-[2rem] border border-blue-100 bg-blue-50 p-6">
-                    <h2 className="text-xl font-bold text-blue-950">پرداخت نهایی این ماه</h2>
+                    <h2 className="text-base font-bold text-blue-950">پرداخت نهایی این ماه</h2>
                     <div className="mt-5 rounded-2xl bg-white p-5 text-center shadow-sm">
                       <p className="text-sm font-medium text-slate-500">
                         {employeeValues.employeeName.trim() || "مبلغ قابل پرداخت"}
                       </p>
-                      <p className="mt-2 text-3xl font-extrabold text-blue-800">
+                      <p className="mt-2 text-xl font-extrabold text-blue-800">
                         {monthlyPay !== null ? `${formatToman(monthlyPay)} تومان` : "نامشخص"}
                       </p>
                     </div>
@@ -1098,7 +1098,7 @@
                   </div>
 
                   <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
-                    <h2 className="text-xl font-bold text-slate-950">تعادل ابعاد ارزیابی</h2>
+                    <h2 className="text-base font-bold text-slate-950">تعادل ابعاد ارزیابی</h2>
                     <div className="mt-5 flex flex-col gap-4">
                       {dimensionStats.map((stat) => (
                         <div key={stat.dimension}>
@@ -1163,7 +1163,7 @@
                             : "bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-800"
                         }`}
                       >
-                        <span className="block text-base font-extrabold">{tab.label}</span>
+                        <span className="block text-sm font-extrabold">{tab.label}</span>
                         <span
                           className={`mt-1 block text-sm ${
                             isActive ? "text-blue-100" : "text-slate-400"
