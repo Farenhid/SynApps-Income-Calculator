@@ -2,6 +2,13 @@
 
 ابزار تک‌صفحه‌ای (بدون build) برای محاسبه **حقوق پایه ساعتی** بر اساس مدل تاب‌آوری و **پرداخت ماهانه** بر اساس عدد پایه، ضریب فردی (ماتریس ارزیابی) و ساعات کار.
 
+**مخزن GitHub:** [github.com/Farenhid/SynApps-Income-Calculator](https://github.com/Farenhid/SynApps-Income-Calculator)
+
+```bash
+git clone https://github.com/Farenhid/SynApps-Income-Calculator.git
+cd SynApps-Income-Calculator
+```
+
 ## ویژگی‌ها
 
 - **تب حقوق پایه ساعتی:** ورودی کف بقا، نرخ ایده‌آل بازار، تاب‌آوری فعلی و هدف؛ خروجی نرخ پایه با فرمول مدل تاب‌آوری.
