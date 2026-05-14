@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ماشین‌حساب حقوق و ضریب پرداخت</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Vazirmatn", "Tahoma", "Arial", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="min-h-screen bg-slate-50 font-sans text-slate-900">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useMemo, useState } = React;
+
+      const inputFields = [
+        {
+          key: "wMin",
+          label: "حداقل حقوق ساعتی (کف بقا)",
+          description: "کمترین حقوق ساعتی برای تامین هزینه‌های اولیه (به تومان).",
+          placeholder: "مثلاً ۸۰,۰۰۰",
+        },
+        {
+          key: "wTarget",
+          label: "حقوق ساعتی ایده‌آل بازار",
+          description:
+            "حقوق ساعتی نرمال و رقابتی بازار در صورت وضعیت عالی شرکت (به تومان).",
+          placeholder: "مثلاً ۲۰۰,۰۰۰",
+        },
+        {
+          key: "rActual",
+          label: "تاب‌آوری فعلی شرکت (ماه)",
+          description: "با موجودی فعلی، شرکت دقیقاً چند ماه می‌تواند زنده بماند؟",
+          placeholder: "مثلاً ۶",
+        },
+        {
+          key: "rTarget",
+          label: "تاب‌آوری هدف و امن (ماه)",
+          description: "تعداد ماه‌های ایده‌آل برای حاشیه امنیت کامل (مثلاً ۱۲ یا ۱۸ ماه).",
+          placeholder: "مثلاً ۱۲",
+        },
+      ];
+
+      const initialValues = {
+        wMin: "80000",
+        wTarget: "200000",
+        rActual: "6",
+        rTarget: "12",
+      };
+
+      const sourceDocs = {
+        baseRate:
+          "https://docs.google.com/document/d/1CbSKXqWvSbR7BPQnvLGY15N0717vocnk04gyyQxn4T0/edit?tab=t.0",
+        multiplier:
+          "https://docs.google.com/document/d/1O9Vjvl8vjm6Jz9f_wOp62LVEPZMxz6Cp2l5uCd64_e4/edit?tab=t.0",
+      };
+
+      const rolesData = {
+        admin: {
+          id: "admin",
+          title: "نیروی اداری و مالی",
+          farsi: "Admin / Finance",
+          factors: [
+            {
+              id: "a1",
+              dim: "فنی",
+              dimFull: "اجرای فنی / مهارت‌های سخت",
+              name: "سامانه‌های بیمه و مالیات",
+              anchors: {
+                1: "در ارسال لیست بیمه یا مالیات ماهانه مکرراً خطا می‌کند یا نیاز به کمک دارد.",
+                3: "لیست‌های بیمه و مالیات را بدون خطا و پیش از پایان مهلت قانونی در سامانه‌ها ثبت می‌کند.",
+                5: "تسلط کامل به قوانین دارد و از معافیت‌ها یا بخشودگی‌های قانونی به نفع شرکت استفاده می‌کند.",
+              },
+            },
+            {
+              id: "a2",
+              dim: "فنی",
+              dimFull: "اجرای فنی / مهارت‌های سخت",
+              name: "محاسبه حقوق و دستمزد",
+              anchors: {
+                1: "در محاسبه اضافه‌کار، کسر کار یا مرخصی‌ها اشتباهات محاسباتی دارد.",
+                3: "فیش‌های حقوقی را با دقت ۱۰۰٪ بر اساس تایم‌شیت‌ها محاسبه و آماده می‌کند.",
+                5: "سیستم حقوق و دستمزد را به طور کامل مکانیزه کرده و فرمول‌های پیچیده پاداش و مالیات را در اکسل/نرم‌افزار پیاده می‌کند.",
+              },
+            },
+            {
+              id: "a3",
+              dim: "فنی",
+              dimFull: "اجرای فنی / مهارت‌های سخت",
+              name: "ثبت دخل و خرج و صدور فاکتور",
+              anchors: {
+                1: "فاکتورها را با تاخیر صادر کرده و در ثبت هزینه‌های روزمره بی‌نظم است.",
+                3: "فاکتورهای رسمی/غیررسمی را به موقع صادر کرده و اسناد حسابداری را دقیق ثبت می‌کند.",
+                5: "داشبورد مالی لحظه‌ای برای مدیرعامل ساخته که وضعیت نقدینگی و مطالبات را شفاف نشان می‌دهد.",
+              },
+            },
+            {
+              id: "a4",
+              dim: "استقلال",
+              dimFull: "استقلال / حل مسئله مستقل",
+              name: "پیگیری امور خارج از شرکت",
+              anchors: {
+                1: "در مراجعات به ادارات (بیمه/مالیات) با اولین مانع یا جوابِ «نه» کار را رها کرده و به مدیر ارجاع می‌دهد.",
+                3: "با پیگیری مستمر و سماجت، مشکلات اداری و پرونده‌های شرکت را در سازمان‌ها به سرانجام می‌رساند.",
+                5: "با ایجاد ارتباطات موثر در ادارات، موانع بوروکراتیک را با راهکارهای خلاقانه و سریع دور می‌زند.",
+              },
+            },
+            {
+              id: "a5",
+              dim: "استقلال",
+              dimFull: "استقلال / حل مسئله مستقل",
+              name: "مدیریت تنخواه و خریدهای دفتری",
+              anchors: {
+                1: "اجازه می‌دهد اقلام ضروری تمام شود یا تنخواه صفر شود و سپس به مدیر اطلاع می‌دهد.",
+                3: "موجودی اقلام دفتری را مدیریت کرده و تنخواه را به موقع شارژ می‌کند.",
+                5: "به صورت مستقل تامین‌کنندگان ارزان‌تر پیدا کرده و هزینه‌های جاری دفتر را به طور ملموس کاهش می‌دهد.",
+              },
+            },
+            {
+              id: "a6",
+              dim: "تاثیر",
+              dimFull: "تاثیر تجاری / بازگشت سرمایه",
+              name: "سرعت وصول مطالبات",
+              anchors: {
+                1: "به دلیل عدم پیگیری، پرداخت فاکتورهای مشتریان دائماً با تاخیر مواجه می‌شود.",
+                3: "با پیگیری‌های منظم تلفنی و کتبی، مطالبات را در موعد مقرر وصول می‌کند.",
+                5: "چرخه وصول مطالبات را کوتاه‌تر کرده و تاثیر مستقیم و مثبتی روی جریان نقدینگی (Cash Flow) شرکت می‌گذارد.",
+              },
+            },
+            {
+              id: "a7",
+              dim: "تاثیر",
+              dimFull: "تاثیر تجاری / بازگشت سرمایه",
+              name: "جلوگیری از جرایم قانونی",
+              anchors: {
+                1: "به دلیل تاخیر یا بی‌دقتی، باعث تحمیل جریمه دیرکرد بیمه یا مالیات به شرکت شده است.",
+                3: "با زمان‌بندی دقیق، ریسک جرایم قانونی را به صفر مطلق رسانده است.",
+                5: "در حسابرسی‌های مالیاتی یا دفاعیات بیمه، با ارائه اسناد دقیق مانع از تضییع حقوق شرکت می‌شود.",
+              },
+            },
+            {
+              id: "a8",
+              dim: "فرآیند",
+              dimFull: "نظم فرآیند / دقت سیستم",
+              name: "بایگانی اسناد مالی و قراردادها",
+              anchors: {
+                1: "اسناد فیزیکی یا دیجیتال نامرتب هستند و پیدا کردن یک قرارداد قدیمی زمان‌بر است.",
+                3: "تمام اسناد، فاکتورها و قراردادها به صورت منظم پوشه‌بندی و بایگانی شده‌اند.",
+                5: "یک سیستم بایگانی تمام دیجیتال با قابلیت جستجوی سریع پیاده کرده که برای ممیزی‌های ناگهانی ۱۰۰٪ آماده است.",
+              },
+            },
+            {
+              id: "a9",
+              dim: "فرآیند",
+              dimFull: "نظم فرآیند / دقت سیستم",
+              name: "نظم در پرداخت‌ها",
+              anchors: {
+                1: "پرداخت قبوض شرکت، اینترنت یا حقوق‌ها را گهگاه فراموش می‌کند.",
+                3: "تمام پرداخت‌های روتین و حقوق پرسنل را دقیقاً در تاریخ مقرر انجام می‌دهد.",
+                5: "صف پرداخت‌های مکانیزه با تاییدیه چندمرحله‌ای ایجاد کرده تا هیچ پرداختی جا نماند.",
+              },
+            },
+            {
+              id: "a10",
+              dim: "فرآیند",
+              dimFull: "نظم فرآیند / دقت سیستم",
+              name: "گزارش‌دهی دوره‌ای",
+              anchors: {
+                1: "تنها در صورت پیگیری و اصرار مدیرعامل گزارش کار یا مالی ارائه می‌دهد.",
+                3: "در پایان هر ماه به صورت خودکار ترازنامه ساده و گزارش تنخواه را ارائه می‌دهد.",
+                5: "گزارش‌های تحلیلی از روند افزایش هزینه‌ها ارائه داده و هشدارهای پیشگیرانه صادر می‌کند.",
+              },
+            },
+          ],
+        },
+        dev: {
+          id: "dev",
+          title: "توسعه‌دهنده فول‌استک",
+          farsi: "Full-Stack Developer",
+          factors: [
+            {
+              id: "d1",
+              dim: "فنی",
+              dimFull: "اجرای فنی / مهارت‌های سخت",
+              name: "توسعه رابط کاربری (Front-end)",
+              anchors: {
+                1: "طرح‌های UI را با بی‌دقتی و بدون در نظر گرفتن ریسپانسیو بودن (موبایل) پیاده می‌کند.",
+                3: "طرح‌های UI را دقیقاً مطابق دیزاین (Pixel-perfect) و کاملاً ریسپانسیو پیاده‌سازی می‌کند.",
+                5: "کامپوننت‌های UI قابل استفاده مجدد می‌سازد و انیمیشن‌ها/Micro-interactions برای بهبود UX اضافه می‌کند.",
+              },
+            },
+            {
+              id: "d2",
+              dim: "فنی",
+              dimFull: "اجرای فنی / مهارت‌های سخت",
+              name: "منطق سرور و دیتابیس (Back-end)",
+              anchors: {
+                1: "کوئری‌های کُند می‌نویسد و در طراحی ساختار دیتابیس (Relations) اشتباهات پایه‌ای دارد.",
+                3: "APIهای استاندارد (REST/GraphQL) امن توسعه داده و دیتابیس را بهینه طراحی می‌کند.",
+                5: "معماری مقیاس‌پذیر پیاده می‌کند، Caching اضافه کرده و Background Worker ها را برای تسک‌های سنگین مدیریت می‌کند.",
+              },
+            },
+            {
+              id: "d3",
+              dim: "فنی",
+              dimFull: "اجرای فنی / مهارت‌های سخت",
+              name: "یکپارچه‌سازی استک (Integration)",
+              anchors: {
+                1: "در اتصال فرانت‌اند به APIها مشکل دارد و Stateهای خطا یا لودینگ را نادیده می‌گیرد.",
+                3: "ارتباط بین فرانت و بک‌اند را بی‌نقص برقرار کرده و خطاهای شبکه را به درستی در UI مدیریت می‌کند.",
+                5: "حجم Payloadها را بهینه‌سازی کرده و همگام‌سازی پیچیده State ها (مثلاً با WebSockets) را پیاده می‌کند.",
+              },
+            },
+            {
+              id: "d4",
+              dim: "استقلال",
+              dimFull: "استقلال / حل مسئله مستقل",
+              name: "دیباگینگ سراسری (Full-Stack)",
+              anchors: {
+                1: "با دیدن یک ارور مبهم سرور، کار را متوقف کرده و منتظر کمک می‌ماند.",
+                3: "باگ‌ها را از کنسول مرورگر تا لاگ‌های سرور و دیتابیس به صورت مستقل ردیابی و حل می‌کند.",
+                5: "ابزارهای مانیتورینگ (مثل Sentry) را تنظیم می‌کند تا باگ‌ها را قبل از گزارش کاربران شناسایی کند.",
+              },
+            },
+            {
+              id: "d5",
+              dim: "استقلال",
+              dimFull: "استقلال / حل مسئله مستقل",
+              name: "انتخاب ابزار و تکنولوژی",
+              anchors: {
+                1: "فقط از کدهای کپی شده یا کتابخانه‌هایی که از قبل می‌شناسد استفاده می‌کند.",
+                3: "برای هر تسک با جستجو در داکیومنت‌ها، مناسب‌ترین پکیج یا ابزار را انتخاب می‌کند.",
+                5: "تکنولوژی‌های جدید را به صورت POC (نسخه آزمایشی) تست کرده و در صورت اثبات کارایی، به استک شرکت اضافه می‌کند.",
+              },
+            },
+            {
+              id: "d6",
+              dim: "تاثیر",
+              dimFull: "تاثیر تجاری / بازگشت سرمایه",
+              name: "تحویل کامل فیچرها (End-to-End)",
+              anchors: {
+                1: "فیچرها را نیمه‌کاره رها می‌کند (مثلاً بک‌اند آماده است ولی فرانت نه).",
+                3: "فیچرهای محول شده را به صورت صفر تا صد (فرانت، بک‌اند و دیتابیس) در زمان مقرر تحویل می‌دهد.",
+                5: "علاوه بر تحویل سریع فیچرها، به صورت خودکار روی رفع بدهی‌های فنی (Tech Debt) در اوقات خالی کار می‌کند.",
+              },
+            },
+            {
+              id: "d7",
+              dim: "تاثیر",
+              dimFull: "تاثیر تجاری / بازگشت سرمایه",
+              name: "بهینه‌سازی عملکرد و سرعت",
+              anchors: {
+                1: "کدهای او باعث لود شدن کُند صفحات (بیش از ۵ ثانیه) یا کرش کردن برنامه می‌شود.",
+                3: "اپلیکیشن در زمان استاندارد کمتر از ۲ ثانیه لود شده و APIها زمان پاسخگویی معقولی دارند.",
+                5: "امتیاز Lighthouse بالای ۹۰ کسب می‌کند و زمان پاسخگویی APIها را به زیر ۱۰۰ میلی‌ثانیه کاهش می‌دهد.",
+              },
+            },
+            {
+              id: "d8",
+              dim: "فرآیند",
+              dimFull: "نظم فرآیند / دقت سیستم",
+              name: "کنترل نسخه (Git) و استقرار",
+              anchors: {
+                1: "کامیت‌های نامنظم دارد و کد را بدون تست روی سرور Merge می‌کند که باعث خرابی می‌شود.",
+                3: "از Branch های مجزا استفاده کرده و کدهای فرانت و بک را با کامیت‌های معنادار مدیریت می‌کند.",
+                5: "پایپ‌لاین‌های CI/CD را پیاده‌سازی یا نگهداری می‌کند تا دیپلوی کدها کاملاً خودکار و بدون قطعی (Zero-downtime) باشد.",
+              },
+            },
+            {
+              id: "d9",
+              dim: "فرآیند",
+              dimFull: "نظم فرآیند / دقت سیستم",
+              name: "مستندسازی (Documentation)",
+              anchors: {
+                1: "کدهایش بدون کامنت است و هیچ مستنداتی برای APIهایی که می‌نویسد ارائه نمی‌دهد.",
+                3: "برای APIها داکیومنت خوانا (مثل Swagger/Postman) و برای کامپوننت‌های فرانت مستندات تهیه می‌کند.",
+                5: "ویکیِ معماری سیستم را برای کل استک می‌نویسد که Onboarding نیروهای جدید را به شدت تسریع می‌کند.",
+              },
+            },
+            {
+              id: "d10",
+              dim: "فرآیند",
+              dimFull: "نظم فرآیند / دقت سیستم",
+              name: "پوشش تست",
+              anchors: {
+                1: "هیچ‌گونه تست خودکاری برای کدهای خود نمی‌نویسد.",
+                3: "برای بخش‌های بحرانی و Core سیستم تست‌های Unit می‌نویسد.",
+                5: "مجموعه کاملی از تست‌های Unit، Integration و E2E (مثل Cypress) برای کل استک توسعه می‌دهد.",
+              },
+            },
+          ],
+        },
+        tech_coach: {
+          id: "tech_coach",
+          title: "منتور و کوچ فنی ارشد",
+          farsi: "Technical Coach",
+          factors: [
+            {
+              id: "tc1",
+              dim: "فنی",
+              dimFull: "اجرای فنی / مهارت‌های سخت",
+              name: "بررسی عمیق معماری (Architecture)",
+              anchors: {
+                1: "در Code Review ها فقط به ایرادات سطحی (مثل سینتکس) می‌پردازد.",
+                3: "ایرادات پایه‌ای دیتابیس یا معماری را پیش از پیاده‌سازی در کدهای تیم تشخیص می‌دهد.",
+                5: "سیستم‌های قدیمی (Legacy) را به معماری‌های مقیاس‌پذیر بازطراحی کرده و برای پیاده‌سازی با تیم Pair می‌شود.",
+              },
+            },
+            {
+              id: "tc2",
+              dim: "فنی",
+              dimFull: "اجرای فنی / مهارت‌های سخت",
+              name: "حل چالش‌های بحرانی",
+              anchors: {
+                1: "توانایی حل باگ‌هایی که از سطح برنامه‌نویسان تیم بالاتر است را ندارد.",
+                3: "مستقیماً وارد عمل شده و حوادث بحرانی پروداکشن (Incidents) یا گلوگاه‌های عملکردی را حل می‌کند.",
+                5: "راه‌حل‌های ساختاری ایجاد می‌کند که به طور دائمی مانع از بروز یک دسته کامل از باگ‌ها در آینده می‌شود.",
+              },
+            },
+            {
+              id: "tc3",
+              dim: "فنی",
+              dimFull: "اجرای فنی / مهارت‌های سخت",
+              name: "منتورینگ تکنیکال",
+              anchors: {
+                1: "به جای توضیح دادن، کد را خودش می‌نویسد یا فقط می‌گوید «چه کاری» انجام شود بدون دلیل.",
+                3: "مفاهیم عمیق (دیزاین پترن‌ها، مموری) را در جلسات Pair Programming به نیروها آموزش می‌دهد.",
+                5: "با یک برنامه توسعه فردی (IDP) ساختاریافته، برنامه‌نویسان Junior را در بازه مشخص به سطح Mid/Senior ارتقا می‌دهد.",
+              },
+            },
+            {
+              id: "tc4",
+              dim: "استقلال",
+              dimFull: "استقلال / حل مسئله مستقل",
+              name: "کشف پروآکتیو بدهی فنی",
+              anchors: {
+                1: "صبر می‌کند تا تیم یا مدیرعامل از کیفیت پایین کدها و کُند بودن توسعه شکایت کنند.",
+                3: "بدهی‌های فنی (Tech Debt) را شناسایی کرده و آن‌ها را در تسک‌های منظم اسپرینت می‌گنجاند.",
+                5: "تله‌متری سیستم را مانیتور کرده و باگ‌ها یا مشکلات زیرساختی را قبل از وقوع پیش‌بینی و خنثی می‌کند.",
+              },
+            },
+            {
+              id: "tc5",
+              dim: "استقلال",
+              dimFull: "استقلال / حل مسئله مستقل",
+              name: "میانجی‌گری در اختلافات فنی",
+              anchors: {
+                1: "اجازه می‌دهد بحث‌های بی‌پایان بین توسعه‌دهندگان در مورد ابزارها و تکنولوژی‌ها ادامه یابد.",
+                3: "بحث‌های فنی را تسهیل کرده و تیم را بر اساس مزایا/معایب منطقی به یک اجماع می‌رساند.",
+                5: "فرهنگ قوی نوشتن RFC (درخواست برای نظر) را نهادینه می‌کند تا تصمیمات فنی کاملاً مستند و علمی باشند.",
+              },
+            },
+            {
+              id: "tc6",
+              dim: "تاثیر",
+              dimFull: "تاثیر تجاری / بازگشت سرمایه",
+              name: "افزایش ظرفیت تولید تیم",
+              anchors: {
+                1: "حضورش تاثیری در سرعت و خروجی کل تیم فنی ندارد و فقط خودش کد می‌زند.",
+                3: "با رفع سریع موانعِ برنامه‌نویسان، باعث حفظ سرعت ثابت و تحویل به موقع پروژه‌ها می‌شود.",
+                5: "ابزارها، کتابخانه‌ها یا فریم‌ورک‌های داخلی خلق می‌کند که سرعت توسعه کل تیم را برای همیشه دو برابر می‌کند.",
+              },
+            },
+            {
+              id: "tc7",
+              dim: "تاثیر",
+              dimFull: "تاثیر تجاری / بازگشت سرمایه",
+              name: "حفظ و نگهداشت نیروها (Retention)",
+              anchors: {
+                1: "فضای کاری ترسناکی ایجاد کرده که نیروها از سوال پرسیدن از او هراس دارند.",
+                3: "محیطی امن از نظر روانی ایجاد می‌کند که اشتباهات فنی به عنوان فرصت یادگیری دیده می‌شوند.",
+                5: "فرهنگ مهندسی جذابی می‌سازد که مستقیماً باعث جذب استعدادهای برتر و کاهش نرخ خروج نیروها می‌شود.",
+              },
+            },
+            {
+              id: "tc8",
+              dim: "فرآیند",
+              dimFull: "نظم فرآیند / دقت سیستم",
+              name: "استانداردسازی کدها",
+              anchors: {
+                1: "نسبت به استایل‌های کدنویسی متفاوت و نامنظم در تیم بی‌تفاوت است.",
+                3: "قوانین Linting سخت‌گیرانه و فرآیند استاندارد برای Review ها تعریف و اجرا می‌کند.",
+                5: "یک «دفترچه راهنمای مهندسی» (Playbook) اختصاصی برای شرکت توسعه داده و ابزارهای تحلیل کد (Static Analysis) می‌سازد.",
+              },
+            },
+            {
+              id: "tc9",
+              dim: "فرآیند",
+              dimFull: "نظم فرآیند / دقت سیستم",
+              name: "مدیریت جلسات همگام‌سازی فنی",
+              anchors: {
+                1: "جلسات فنی تیم را بدون دستور جلسه مشخص و با اتلاف وقت زیاد برگزار می‌کند.",
+                3: "جلسات همگام‌سازی معماری را کوتاه، متمرکز و با خروجی‌های مشخص هدایت می‌کند.",
+                5: "جلسات فنی را به رویدادهای انتقال دانش (Tech Talks) با ارزش بالا تبدیل می‌کند.",
+              },
+            },
+            {
+              id: "tc10",
+              dim: "فرآیند",
+              dimFull: "نظم فرآیند / دقت سیستم",
+              name: "سیستم‌سازی انتقال دانش",
+              anchors: {
+                1: "دانش سیستم را نزد خود نگه می‌دارد و تبدیل به یک گلوگاه (Single Point of Failure) می‌شود.",
+                3: "راه‌حل‌های پیچیده را پس از حل در ویکیِ تیم مستند می‌کند تا بقیه هم دسترسی داشته باشند.",
+                5: "یک آکادمی داخلی یا سری کارگاه‌های منظم برای ارتقای سیستماتیک سطح علمی کل تیم راه‌اندازی می‌کند.",
+              },
+            },
+          ],
+        },
+        exec_coach: {
+          id: "exec_coach",
+          title: "مشاور مدیرعامل / محصول",
+          farsi: "Exec / Product Coach",
+          factors: [
+            {
+              id: "ec1",
+              dim: "فنی",
+              dimFull: "اجرای فنی / مهارت‌های سخت",
+              name: "استراتژی و کشف محصول",
+              anchors: {
+                1: "پیشنهاد ساخت فیچرهایی را می‌دهد که هیچ اعتبارسنجی (Validation) در بازار نشده‌اند.",
+                3: "نقشه راه محصول را مستقیماً با بازخوردهای کاربران و اهداف تجاری شرکت همسو می‌کند.",
+                5: "فضاهای بکر بازار (Blue Ocean) را کشف کرده و یک چشم‌انداز محصولِ چندساله و برنده طراحی می‌کند.",
+              },
+            },
+            {
+              id: "ec2",
+              dim: "فنی",
+              dimFull: "اجرای فنی / مهارت‌های سخت",
+              name: "طراحی مکانیزم‌های کسب‌وکار",
+              anchors: {
+                1: "تمرکزش فقط روی معیارهای نمایشی (Vanity Metrics) مثل تعداد ثبت‌نام است.",
+                3: "حلقه‌های رشد، قیمت‌گذاری و نگهداشت کاربر طراحی می‌کند که اقتصاد واحد (Unit Economics) را بهبود می‌بخشد.",
+                5: "مدل کسب‌وکار را به گونه‌ای بازطراحی می‌کند که قفل رشد نمایی در درآمد و حاشیه سود شکسته شود.",
+              },
+            },
+            {
+              id: "ec3",
+              dim: "فنی",
+              dimFull: "اجرای فنی / مهارت‌های سخت",
+              name: "بینش طراحی تجربه کاربری (UX)",
+              anchors: {
+                1: "بازخوردهای سلیقه‌ای (مثلاً «از این رنگ خوشم نمی‌آید») به تیم دیزاین می‌دهد.",
+                3: "اصول اثبات‌شده UX و روانشناسی شناختی را برای بهبود سفرهای کاربری (User Journeys) اعمال می‌کند.",
+                5: "تجربه کاربری را به گونه‌ای بازمعماری می‌کند که نرخ تبدیل (Conversion Rate) به طور چشمگیری افزایش یابد.",
+              },
+            },
+            {
+              id: "ec4",
+              dim: "استقلال",
+              dimFull: "استقلال / حل مسئله مستقل",
+              name: "هدایت و به چالش کشیدن مدیرعامل",
+              anchors: {
+                1: "مانند یک «بله‌قربان‌گو» با تمام ایده‌های مدیرعامل موافقت می‌کند.",
+                3: "مفروضات مدیرعامل را با استفاده از داده‌ها و منطق به صورت سازنده به چالش می‌کشد.",
+                5: "با استفاده از چارچوب‌های استراتژیک، مدیرعامل را از تصمیمات پرریسک و احساسی منصرف کرده و مسیر را اصلاح می‌کند.",
+              },
+            },
+            {
+              id: "ec5",
+              dim: "استقلال",
+              dimFull: "استقلال / حل مسئله مستقل",
+              name: "رفع بن‌بست‌های سازمانی",
+              anchors: {
+                1: "اصطکاک‌های بین بخش‌های مختلف (مثل فنی و محصول) را نادیده می‌گیرد.",
+                3: "عدم همسویی بین تیم‌ها را شناسایی کرده و انتظارات آن‌ها را نسبت به هم تنظیم می‌کند.",
+                5: "شاخص‌ها (OKRs) و ساختار پاداش سازمان را به گونه‌ای بازطراحی می‌کند که جزیره‌ای کار کردن (Silos) برای همیشه از بین برود.",
+              },
+            },
+            {
+              id: "ec6",
+              dim: "تاثیر",
+              dimFull: "تاثیر تجاری / بازگشت سرمایه",
+              name: "تاثیر بر متریک‌های کلیدی (North Star)",
+              anchors: {
+                1: "مشاوره‌های او تغییر قابل اندازه‌گیری در شاخص‌های کلیدی شرکت ایجاد نمی‌کند.",
+                3: "مشاوره‌های او مستقیماً منجر به تحقق اهداف فصلی کسب‌وکار و محصول می‌شود.",
+                5: "استراتژی‌های او منجر به جذب سرمایه موفق، گسترش شدید سهم بازار یا جذب مشتریان کلیدی می‌شود.",
+              },
+            },
+            {
+              id: "ec7",
+              dim: "تاثیر",
+              dimFull: "تاثیر تجاری / بازگشت سرمایه",
+              name: "زمان رسیدن به بازار (Time-to-Market)",
+              anchors: {
+                1: "پیشنهاد ساخت نسخه‌های اولیه (MVP) سنگینی می‌دهد که ماه‌ها زمان توسعه می‌برند.",
+                3: "ابعاد محصول را به یک MVP چابک برای اعتبارسنجی سریع و عرضه به بازار محدود می‌کند.",
+                5: "تناسب محصول با بازار (PMF) را با روش‌های بدون کد (No-code) قبل از نوشتن حتی یک خط کد توسط تیم فنی، اثبات می‌کند.",
+              },
+            },
+            {
+              id: "ec8",
+              dim: "فرآیند",
+              dimFull: "نظم فرآیند / دقت سیستم",
+              name: "ساختاردهی به تصمیمات",
+              anchors: {
+                1: "اجازه می‌دهد تصمیمات محصولی صرفاً بر اساس احساسات یا نظرات شخصی گرفته شوند.",
+                3: "چارچوب‌های ساختاریافته (مثل RICE یا Kano) را برای اولویت‌بندی فیچرها در تیم پیاده می‌کند.",
+                5: "یک «سیستم‌عامل تصمیم‌گیری مبتنی بر داده» را در کل تیم مدیریتی شرکت نهادینه می‌کند.",
+              },
+            },
+            {
+              id: "ec9",
+              dim: "فرآیند",
+              dimFull: "نظم فرآیند / دقت سیستم",
+              name: "سیستم‌سازی تفکر",
+              anchors: {
+                1: "جلسات مشاوره او پراکنده و بدون مستندات یا پیگیری بعدی هستند.",
+                3: "جلسات کوچینگ را با اقدامات عملی مشخص (Action Items) برای مدیرعامل خلاصه‌سازی می‌کند.",
+                5: "مدل‌های ذهنی و Playbook های قابل تکرار خلق می‌کند تا مدیرعامل در آینده بتواند مستقلاً چالش‌های مشابه را حل کند.",
+              },
+            },
+            {
+              id: "ec10",
+              dim: "فرآیند",
+              dimFull: "نظم فرآیند / دقت سیستم",
+              name: "ممیزی فرآیندهای محصول",
+              anchors: {
+                1: "به نحوه تعامل و کارکرد تیم محصول با تیم فنی کاری ندارد.",
+                3: "روند استانداردی برای جلسات کشف محصول (Discovery) و تحویل (Delivery) ایجاد می‌کند.",
+                5: "یک سیستم چابکِ دوگانه (Dual-track Agile) در سطح کلاس جهانی پیاده می‌کند که دقیقاً متناسب با سایز شرکت است.",
+              },
+            },
+          ],
+        },
+      };
+
+      const dimensions = ["فنی", "استقلال", "تاثیر", "فرآیند"];
+
+      function toEnglishDigits(value) {
+        const persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+        const arabicDigits = "٠١٢٣٤٥٦٧٨٩";
+
+        return value
+          .replace(/[۰-۹]/g, (digit) => persianDigits.indexOf(digit))
+          .replace(/[٠-٩]/g, (digit) => arabicDigits.indexOf(digit))
+          .replace(/,/g, "");
+      }
+
+      function parseInput(value) {
+        const normalizedValue = toEnglishDigits(String(value).trim());
+        return normalizedValue === "" ? NaN : Number(normalizedValue);
+      }
+
+      function formatToman(value) {
+        return new Intl.NumberFormat("en-US", {
+          maximumFractionDigits: 0,
+        }).format(Math.round(value));
+      }
+
+      function formatNumber(value) {
+        return new Intl.NumberFormat("en-US", {
+          maximumFractionDigits: 1,
+        }).format(value);
+      }
+
+      function Field({ field, value, onChange }) {
+        return (
+          <label className="group rounded-2xl border border-slate-200 bg-slate-50/80 p-4 transition focus-within:border-blue-500 focus-within:bg-white focus-within:shadow-lg focus-within:shadow-blue-100">
+            <span className="block text-base font-bold text-slate-900">{field.label}</span>
+            <span className="mt-2 block min-h-12 text-sm leading-6 text-slate-500">
+              {field.description}
+            </span>
+            <input
+              type="text"
+              inputMode={field.inputMode || "decimal"}
+              value={value}
+              placeholder={field.placeholder}
+              onChange={(event) => onChange(field.key, event.target.value)}
+              className="mt-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-right text-lg font-semibold text-slate-900 outline-none transition placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+            />
+          </label>
+        );
+      }
+
+      function SourceDocButton({ href }) {
+        return (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex w-fit items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm font-bold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100"
+          >
+            <span>منبع فرمول</span>
+            <span className="text-xs leading-none text-slate-400 transition group-hover:text-blue-500" aria-hidden="true">
+              ↗
+            </span>
+          </a>
+        );
+      }
+
+      function BaseRateCalculator() {
+        const [values, setValues] = useState(initialValues);
+        const [calculatedRate, setCalculatedRate] = useState(null);
+        const [message, setMessage] = useState("");
+
+        const preview = useMemo(() => calculateBaseRate(values), [values]);
+
+        function calculateBaseRate(currentValues) {
+          const wMin = parseInput(currentValues.wMin);
+          const wTarget = parseInput(currentValues.wTarget);
+          const rActual = parseInput(currentValues.rActual);
+          const rTarget = parseInput(currentValues.rTarget);
+
+          if ([wMin, wTarget, rActual, rTarget].some((item) => !Number.isFinite(item))) {
+            return {
+              value: null,
+              error: "لطفاً همه فیلدها را با عدد معتبر تکمیل کنید.",
+              ratio: 0,
+            };
+          }
+
+          if (rTarget <= 0) {
+            return {
+              value: null,
+              error: "تاب‌آوری هدف باید بزرگ‌تر از صفر باشد تا محاسبه امکان‌پذیر شود.",
+              ratio: 0,
+            };
+          }
+
+          const runwayRatio = Math.min(1, Math.max(0, rActual / rTarget));
+          const baseRate = wMin + (wTarget - wMin) * runwayRatio;
+
+          return {
+            value: baseRate,
+            error: "",
+            ratio: runwayRatio,
+          };
+        }
+
+        function handleChange(key, value) {
+          setValues((currentValues) => ({
+            ...currentValues,
+            [key]: value,
+          }));
+          setCalculatedRate(null);
+          setMessage("");
+        }
+
+        function handleSubmit(event) {
+          event.preventDefault();
+          const result = calculateBaseRate(values);
+          setCalculatedRate(result.value);
+          setMessage(result.error);
+        }
+
+        const visibleRate = calculatedRate ?? preview.value;
+        const visibleError = message || preview.error;
+        const progressPercent = Math.round((preview.ratio || 0) * 100);
+
+        return (
+          <>
+            <header className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/70">
+              <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1.1fr_0.9fr] lg:p-10">
+                <div className="flex flex-col justify-center">
+                  <span className="mb-4 w-fit rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
+                    مدل تاب‌آوری برای استارتاپ‌ها
+                  </span>
+                  <h1 className="text-3xl font-extrabold leading-tight text-slate-950 sm:text-4xl lg:text-5xl">
+                    ماشین‌حساب حقوق پایه ساعتی (مدل تاب‌آوری)
+                  </h1>
+                  <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
+                    حقوق پایه ساعتی امسال را بر اساس حداقل نیاز، نرخ ایده‌آل بازار و
+                    وضعیت تاب‌آوری مالی شرکت محاسبه کنید.
+                  </p>
+                </div>
+
+                <div className="rounded-3xl bg-gradient-to-br from-blue-700 to-slate-900 p-6 text-white shadow-2xl shadow-blue-900/20">
+                  <p className="text-sm font-medium text-blue-100">نتیجه فعلی</p>
+                  <div className="mt-4 rounded-2xl bg-white/10 p-5 ring-1 ring-white/15">
+                    <p className="text-sm text-blue-100">حقوق پایه ساعتی</p>
+                    <p className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">
+                      {visibleRate !== null ? `${formatToman(visibleRate)} تومان` : "—"}
+                    </p>
+                  </div>
+                  <div className="mt-6">
+                    <div className="mb-2 flex items-center justify-between text-sm text-blue-100">
+                      <span>ضریب تحقق تاب‌آوری</span>
+                      <span>{progressPercent}٪</span>
+                    </div>
+                    <div className="h-3 overflow-hidden rounded-full bg-white/20">
+                      <div
+                        className="h-full rounded-full bg-blue-200 transition-all duration-500"
+                        style={{ width: `${progressPercent}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </header>
+
+            <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
+              <form
+                onSubmit={handleSubmit}
+                className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60 sm:p-7"
+              >
+                <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5">
+                  <h2 className="text-2xl font-bold text-slate-950">ورودی‌های محاسبه</h2>
+                  <p className="leading-7 text-slate-500">
+                    مقادیر را به تومان و ماه وارد کنید. نتیجه می‌تواند هم‌زمان تغییر کند
+                    و با دکمه محاسبه نهایی شود.
+                  </p>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {inputFields.map((field) => (
+                    <Field
+                      key={field.key}
+                      field={field}
+                      value={values[field.key]}
+                      onChange={handleChange}
+                    />
+                  ))}
+                </div>
+
+                {visibleError && (
+                  <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium leading-6 text-amber-800">
+                    {visibleError}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  className="mt-6 w-full rounded-2xl bg-blue-700 px-6 py-4 text-lg font-extrabold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-200"
+                >
+                  محاسبه حقوق پایه امسال
+                </button>
+              </form>
+
+              <aside className="flex flex-col gap-5">
+                <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-950">فرمول محاسبه</h2>
+                      <p className="mt-2 text-sm leading-6 text-slate-500">
+                        منطق این فرمول از داکیومنت عدد ثابت ساعتی سیناپس آمده است.
+                      </p>
+                    </div>
+                    <SourceDocButton href={sourceDocs.baseRate} />
+                  </div>
+                  <div className="mt-4 rounded-2xl bg-slate-900 p-4 text-left font-mono text-sm leading-7 text-blue-100" dir="ltr">
+                    Base_Rate = W_min + ((W_target - W_min) * MIN(1, R_actual / R_target))
+                  </div>
+                  <p className="mt-4 text-sm leading-7 text-slate-500">
+                    هرچه تاب‌آوری فعلی به هدف امن نزدیک‌تر شود، نرخ پایه از کف بقا به
+                    حقوق ایده‌آل بازار نزدیک‌تر می‌شود.
+                  </p>
+                </div>
+
+                <div className="rounded-[2rem] border border-blue-100 bg-blue-50 p-6">
+                  <h2 className="text-xl font-bold text-blue-950">خروجی قابل پرداخت</h2>
+                  <p className="mt-4 text-sm leading-7 text-blue-800">
+                    این عدد نرخ پایه ساعتی پیشنهادی برای سال جاری است و می‌تواند مبنای
+                    تصمیم‌گیری مالی تیم در شرایط فعلی شرکت باشد.
+                  </p>
+                  <div className="mt-5 rounded-2xl bg-white p-5 text-center shadow-sm">
+                    <p className="text-sm font-medium text-slate-500">مبلغ نهایی</p>
+                    <p className="mt-2 text-3xl font-extrabold text-blue-800">
+                      {visibleRate !== null ? `${formatToman(visibleRate)} تومان` : "نامشخص"}
+                    </p>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </>
+        );
+      }
+
+      function CompensationCalculator() {
+        const roleIds = Object.keys(rolesData);
+        const [selectedRoleId, setSelectedRoleId] = useState(roleIds[0]);
+        const [scores, setScores] = useState({});
+        const [employeeValues, setEmployeeValues] = useState({
+          employeeName: "",
+          baseHourlyRate: initialValues.wMin,
+          workedHours: "160",
+        });
+
+        const selectedRole = rolesData[selectedRoleId];
+        const totalScore = Object.values(scores).reduce((sum, value) => sum + value, 0);
+        const answeredCount = Object.keys(scores).length;
+        const multiplier = totalScore > 0 ? 0.7 + totalScore * 0.01 : 1;
+        const baseHourlyRate = parseInput(employeeValues.baseHourlyRate);
+        const workedHours = parseInput(employeeValues.workedHours);
+        const hasValidPaymentInputs =
+          Number.isFinite(baseHourlyRate) &&
+          Number.isFinite(workedHours) &&
+          baseHourlyRate >= 0 &&
+          workedHours >= 0;
+        const monthlyPay = hasValidPaymentInputs ? baseHourlyRate * multiplier * workedHours : null;
+        const paymentError = hasValidPaymentInputs
+          ? ""
+          : "برای محاسبه پرداخت، عدد پایه ساعتی و ساعات کار را با عدد معتبر وارد کنید.";
+
+        const dimensionStats = useMemo(() => {
+          return dimensions.map((dimension) => {
+            const factors = selectedRole.factors.filter((factor) => factor.dim === dimension);
+            const selectedValues = factors
+              .map((factor) => scores[factor.id])
+              .filter((value) => Number.isFinite(value));
+            const sum = selectedValues.reduce((current, value) => current + value, 0);
+            const average = selectedValues.length ? sum / selectedValues.length : 0;
+
+            return {
+              dimension,
+              average,
+              answered: selectedValues.length,
+              total: factors.length,
+            };
+          });
+        }, [scores, selectedRole]);
+
+        function handleEmployeeChange(key, value) {
+          setEmployeeValues((currentValues) => ({
+            ...currentValues,
+            [key]: value,
+          }));
+        }
+
+        function handleRoleChange(roleId) {
+          setSelectedRoleId(roleId);
+          setScores({});
+        }
+
+        function handleScoreChange(factorId, value) {
+          setScores((currentScores) => ({
+            ...currentScores,
+            [factorId]: value,
+          }));
+        }
+
+        function getScoreClass(value, selectedValue) {
+          if (selectedValue !== value) {
+            return "border-slate-200 bg-white text-slate-600 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md";
+          }
+
+          if (value === 1) {
+            return "border-rose-300 bg-rose-50 text-rose-900 shadow-md shadow-rose-100";
+          }
+
+          if (value === 3) {
+            return "border-amber-300 bg-amber-50 text-amber-900 shadow-md shadow-amber-100";
+          }
+
+          return "border-emerald-300 bg-emerald-50 text-emerald-900 shadow-md shadow-emerald-100";
+        }
+
+        return (
+          <>
+            <header className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/70">
+              <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1.1fr_0.9fr] lg:p-10">
+                <div className="flex flex-col justify-center">
+                  <span className="mb-4 w-fit rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
+                    ماتریس ضریب فردی
+                  </span>
+                  <h1 className="text-3xl font-extrabold leading-tight text-slate-950 sm:text-4xl lg:text-5xl">
+                    محاسبه پرداخت ماهانه بر اساس عدد پایه، ضریب و ساعات کار
+                  </h1>
+                  <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
+                    برای هر نیرو نقش را انتخاب کنید، معیارهای رفتاری را امتیاز دهید و
+                    مبلغ قابل پرداخت ماهانه را از ضرب عدد پایه در ضریب فردی و ساعات کار ببینید.
+                  </p>
+                </div>
+
+                <div className="rounded-3xl bg-gradient-to-br from-blue-700 to-slate-900 p-6 text-white shadow-2xl shadow-blue-900/20">
+                  <p className="text-sm font-medium text-blue-100">
+                    {employeeValues.employeeName.trim() || "نیروی انتخاب‌شده"}
+                  </p>
+                  <div className="mt-4 rounded-2xl bg-white/10 p-5 ring-1 ring-white/15">
+                    <p className="text-sm text-blue-100">پرداخت ماهانه پیشنهادی</p>
+                    <p className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">
+                      {monthlyPay !== null ? `${formatToman(monthlyPay)} تومان` : "—"}
+                    </p>
+                  </div>
+                  <div className="mt-5 grid grid-cols-3 gap-3 text-center">
+                    <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
+                      <p className="text-xs text-blue-100">پایه ساعتی</p>
+                      <p className="mt-2 text-lg font-extrabold">
+                        {Number.isFinite(baseHourlyRate) ? formatToman(baseHourlyRate) : "—"}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
+                      <p className="text-xs text-blue-100">ضریب</p>
+                      <p className="mt-2 text-lg font-extrabold">{multiplier.toFixed(2)}x</p>
+                    </div>
+                    <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
+                      <p className="text-xs text-blue-100">ساعت</p>
+                      <p className="mt-2 text-lg font-extrabold">
+                        {Number.isFinite(workedHours) ? formatNumber(workedHours) : "—"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </header>
+
+            <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
+              <section className="flex flex-col gap-6">
+                <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60 sm:p-7">
+                  <div className="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-5">
+                    <h2 className="text-2xl font-bold text-slate-950">مشخصات محاسبه</h2>
+                    <p className="leading-7 text-slate-500">
+                      عدد پایه می‌تواند همان خروجی تب حقوق پایه باشد. ضریب فردی از امتیازهای نقش انتخاب‌شده محاسبه می‌شود.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <Field
+                      field={{
+                        key: "employeeName",
+                        label: "نام نیرو",
+                        description: "برای خوانایی خروجی پرداخت ماهانه.",
+                        placeholder: "مثلاً علی رضایی",
+                        inputMode: "text",
+                      }}
+                      value={employeeValues.employeeName}
+                      onChange={handleEmployeeChange}
+                    />
+                    <Field
+                      field={{
+                        key: "baseHourlyRate",
+                        label: "عدد پایه ساعتی",
+                        description: "نرخ پایه ثابت برای این فرد، به تومان.",
+                        placeholder: "مثلاً ۸۰,۰۰۰",
+                      }}
+                      value={employeeValues.baseHourlyRate}
+                      onChange={handleEmployeeChange}
+                    />
+                    <Field
+                      field={{
+                        key: "workedHours",
+                        label: "ساعات کار ماهانه",
+                        description: "مجموع ساعت کار ثبت‌شده در ماه.",
+                        placeholder: "مثلاً ۱۶۰",
+                      }}
+                      value={employeeValues.workedHours}
+                      onChange={handleEmployeeChange}
+                    />
+                  </div>
+
+                  {paymentError && (
+                    <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium leading-6 text-amber-800">
+                      {paymentError}
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60 sm:p-7">
+                  <div className="mb-5 flex flex-col gap-2 border-b border-slate-100 pb-5">
+                    <h2 className="text-2xl font-bold text-slate-950">انتخاب نقش ارزیابی</h2>
+                    <p className="leading-7 text-slate-500">
+                      با تغییر نقش، امتیازهای قبلی پاک می‌شود تا ضریب برای ماتریس جدید از ابتدا مشخص شود.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {Object.values(rolesData).map((role) => {
+                      const isSelected = role.id === selectedRoleId;
+
+                      return (
+                        <button
+                          key={role.id}
+                          type="button"
+                          onClick={() => handleRoleChange(role.id)}
+                          className={`rounded-2xl border p-4 text-right transition ${
+                            isSelected
+                              ? "border-blue-600 bg-blue-50 shadow-lg shadow-blue-100"
+                              : "border-slate-200 bg-slate-50/80 hover:border-blue-200 hover:bg-white"
+                          }`}
+                        >
+                          <span className="block text-base font-extrabold text-slate-950">
+                            {role.title}
+                          </span>
+                          <span className="mt-1 block text-sm text-slate-500">{role.farsi}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  {selectedRole.factors.map((factor, index) => (
+                    <article
+                      key={factor.id}
+                      className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-lg shadow-slate-200/50"
+                    >
+                      <div className="flex flex-col gap-3 border-b border-slate-100 bg-slate-50/70 p-5 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-sm font-extrabold text-slate-700">
+                            {index + 1}
+                          </span>
+                          <div>
+                            <h3 className="text-lg font-extrabold text-slate-950">{factor.name}</h3>
+                            <p className="mt-1 text-sm text-slate-500">{factor.dimFull}</p>
+                          </div>
+                        </div>
+                        <span className="w-fit rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
+                          {factor.dim}
+                        </span>
+                      </div>
+
+                      <div className="grid gap-3 p-5 md:grid-cols-3">
+                        {[1, 3, 5].map((value) => (
+                          <label
+                            key={value}
+                            className={`flex h-full cursor-pointer flex-col rounded-2xl border-2 p-4 transition ${getScoreClass(
+                              value,
+                              scores[factor.id]
+                            )}`}
+                          >
+                            <input
+                              type="radio"
+                              name={factor.id}
+                              value={value}
+                              checked={scores[factor.id] === value}
+                              onChange={() => handleScoreChange(factor.id, value)}
+                              className="sr-only"
+                            />
+                            <span className="mb-3 text-sm font-black text-slate-500">
+                              امتیاز {value}
+                            </span>
+                            <span className="text-sm font-medium leading-7">{factor.anchors[value]}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              <aside className="flex flex-col gap-5">
+                <div className="sticky top-6 flex flex-col gap-5">
+                  <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <h2 className="text-xl font-bold text-slate-950">خلاصه ضریب فردی</h2>
+                        <p className="mt-2 text-sm leading-6 text-slate-500">
+                          منطق امتیازدهی و ضریب از داکیومنت Dynamic Base-Rate Multiplier آمده است.
+                        </p>
+                      </div>
+                      <SourceDocButton href={sourceDocs.multiplier} />
+                    </div>
+                    <div className="mt-5 grid grid-cols-2 gap-3">
+                      <div className="rounded-2xl bg-slate-50 p-4 text-center">
+                        <p className="text-sm text-slate-500">امتیاز کل</p>
+                        <p className="mt-2 text-3xl font-extrabold text-slate-950">
+                          {totalScore} <span className="text-base text-slate-400">/ 50</span>
+                        </p>
+                      </div>
+                      <div className="rounded-2xl bg-blue-50 p-4 text-center">
+                        <p className="text-sm text-blue-700">ضریب محاسبه‌شده</p>
+                        <p className="mt-2 text-3xl font-extrabold text-blue-800">
+                          {multiplier.toFixed(2)}x
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-5 rounded-2xl bg-slate-900 p-4 text-left font-mono text-sm leading-7 text-blue-100" dir="ltr">
+                      Pay = Base_Rate * Multiplier * Hours
+                    </div>
+                    <p className="mt-4 text-sm leading-7 text-slate-500">
+                      {answeredCount} معیار از {selectedRole.factors.length} معیار این نقش امتیازدهی شده است.
+                    </p>
+                  </div>
+
+                  <div className="rounded-[2rem] border border-blue-100 bg-blue-50 p-6">
+                    <h2 className="text-xl font-bold text-blue-950">پرداخت نهایی این ماه</h2>
+                    <div className="mt-5 rounded-2xl bg-white p-5 text-center shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">
+                        {employeeValues.employeeName.trim() || "مبلغ قابل پرداخت"}
+                      </p>
+                      <p className="mt-2 text-3xl font-extrabold text-blue-800">
+                        {monthlyPay !== null ? `${formatToman(monthlyPay)} تومان` : "نامشخص"}
+                      </p>
+                    </div>
+                    <p className="mt-4 text-sm leading-7 text-blue-800">
+                      این مبلغ از ضرب عدد پایه ساعتی در ضریب فردی و تعداد ساعات کار ماهانه به دست می‌آید.
+                    </p>
+                  </div>
+
+                  <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
+                    <h2 className="text-xl font-bold text-slate-950">تعادل ابعاد ارزیابی</h2>
+                    <div className="mt-5 flex flex-col gap-4">
+                      {dimensionStats.map((stat) => (
+                        <div key={stat.dimension}>
+                          <div className="mb-2 flex items-center justify-between text-sm">
+                            <span className="font-bold text-slate-700">{stat.dimension}</span>
+                            <span className="text-slate-500">
+                              {formatNumber(stat.average)} / 5
+                            </span>
+                          </div>
+                          <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                            <div
+                              className="h-full rounded-full bg-blue-600 transition-all duration-500"
+                              style={{ width: `${(stat.average / 5) * 100}%` }}
+                            ></div>
+                          </div>
+                          <p className="mt-1 text-xs text-slate-400">
+                            {stat.answered} از {stat.total} معیار
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </>
+        );
+      }
+
+      function App() {
+        const [activeTab, setActiveTab] = useState("base");
+
+        const tabs = [
+          {
+            id: "base",
+            label: "حقوق پایه ساعتی",
+            description: "محاسبه عدد ثابت پایه",
+          },
+          {
+            id: "compensation",
+            label: "ضریب و پرداخت ماهانه",
+            description: "محاسبه ضریب فردی و مبلغ نهایی",
+          },
+        ];
+
+        return (
+          <main className="min-h-screen px-4 py-8 sm:px-6 lg:px-8">
+            <section className="mx-auto flex max-w-6xl flex-col gap-8">
+              <nav className="rounded-[2rem] border border-slate-200 bg-white p-2 shadow-lg shadow-slate-200/60">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {tabs.map((tab) => {
+                    const isActive = tab.id === activeTab;
+
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`rounded-[1.5rem] px-5 py-4 text-right transition ${
+                          isActive
+                            ? "bg-blue-700 text-white shadow-lg shadow-blue-700/20"
+                            : "bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-800"
+                        }`}
+                      >
+                        <span className="block text-base font-extrabold">{tab.label}</span>
+                        <span
+                          className={`mt-1 block text-sm ${
+                            isActive ? "text-blue-100" : "text-slate-400"
+                          }`}
+                        >
+                          {tab.description}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </nav>
+
+              <div className="flex flex-col gap-8">
+                {activeTab === "base" ? <BaseRateCalculator /> : <CompensationCalculator />}
+              </div>
+            </section>
+          </main>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>
